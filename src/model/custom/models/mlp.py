@@ -24,13 +24,9 @@ class ExampleModel(tf.keras.Model):
         scce = tf.keras.losses.SparseCategoricalCrossentropy()
         return scce(y, y_hat)
 
-    @staticmethod
-    def optimizer():
-        return tf.keras.optimizers.Adam()
-
 
 def train_step(model, x, y, train_acc):
-    adam = model.optimizer()
+    adam = tf.keras.optimizers.Adam()
     with tf.GradientTape() as tape:
         y_hat = model(x, training=True)
         loss = model.loss_object(y, y_hat)
