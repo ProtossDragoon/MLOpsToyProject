@@ -1,0 +1,15 @@
+artifact_uri: file:///home/nyam/MLOpsToyProject/notebooks/mlops/mlruns/0/0b7690566f2140e18d6fe2ac433171ce/artifacts
+end_time: 1655431908065
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+name: ''
+run_id: 0b7690566f2140e18d6fe2ac433171ce
+run_uuid: 0b7690566f2140e18d6fe2ac433171ce
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1655431907978
+status: 3
+tags: []
+user_id: nyam
