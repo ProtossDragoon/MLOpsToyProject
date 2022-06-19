@@ -70,18 +70,20 @@ def main():
     test_x_dtm = prep_manager.get_dtm(test_x)
     test_x_tfidf = prep_manager.get_tfidf(test_x_dtm)
 
-    input_dim = train_x_tfidf.shape[-1]
-    model = MLPModel(input_dim=input_dim)
-
-    epochs = 3
-    batch_size = 2
-
+    # 데이터 요약
     print(f'train data spec:')
     print(f'x: {train_x_tfidf.shape}({train_x_tfidf.dtype})')
     print(f'y: {train_y.shape}({train_y.dtype})')
     print(f'test data spec:')
     print(f'x: {test_x_tfidf.shape}({test_x_tfidf.dtype})')
     print(f'y: {test_y.shape}({test_y.dtype})')
+
+    # 모델 정의
+    input_dim = train_x_tfidf.shape[-1]
+    model = MLPModel(input_dim=input_dim)
+
+    epochs = 3
+    batch_size = 2
 
     tfds_train = tf.data.Dataset.from_tensor_slices(
         (train_x_tfidf, train_y)).batch(batch_size)
@@ -104,7 +106,8 @@ def main():
         test_step(model, test_x, test_y, test_acc=test_acc)
 
     # 요약
-    print(f'train_acc: {train_acc.result():.3f}, test_acc: {test_acc.result():.3f}')
+    print(f'train_acc: {train_acc.result():.3f},'
+          f'test_acc: {test_acc.result():.3f}')
 
 
 if __name__ == '__main__':

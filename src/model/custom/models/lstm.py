@@ -69,6 +69,15 @@ def main():
     test_x, test_y = prep_manager.get_xy(test_df, {'spam': 0., 'ham': 1.})
     test_x_onehot = prep_manager.get_onehot(test_x)
 
+    # 데이터 요약
+    print(f'train data spec:')
+    print(f'x: {train_x_onehot.shape}({train_x_onehot.dtype})')
+    print(f'y: {train_y.shape}({train_y.dtype})')
+    print(f'test data spec:')
+    print(f'x: {test_x_onehot.shape}({test_x_onehot.dtype})')
+    print(f'y: {test_y.shape}({test_y.dtype})')
+
+    # 모델 정의
     word_embedding_dim = train_x_onehot.shape[-1]
     sentence_max_len_dim = train_x_onehot.shape[-2]
     model = LSTMModel(
@@ -78,13 +87,6 @@ def main():
 
     epochs = 3
     batch_size = 2
-
-    print(f'train data spec:')
-    print(f'x: {train_x_onehot.shape}({train_x_onehot.dtype})')
-    print(f'y: {train_y.shape}({train_y.dtype})')
-    print(f'test data spec:')
-    print(f'x: {test_x_onehot.shape}({test_x_onehot.dtype})')
-    print(f'y: {test_y.shape}({test_y.dtype})')
 
     tfds_train = tf.data.Dataset.from_tensor_slices(
         (train_x_onehot, train_y)).batch(batch_size)
@@ -107,7 +109,8 @@ def main():
         test_step(model, test_x, test_y, test_acc=test_acc)
 
     # 요약
-    print(f'train_acc: {train_acc.result():.3f}, test_acc: {test_acc.result():.3f}')
+    print(f'train_acc: {train_acc.result():.3f},'
+          f'test_acc: {test_acc.result():.3f}')
 
 
 if __name__ == '__main__':
