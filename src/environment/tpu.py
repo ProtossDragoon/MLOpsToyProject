@@ -8,8 +8,8 @@ import tensorflow as tf
 
 class COLABEnvironmentManager():
 
-    @staticmethod
-    def is_colab_env():
+    @classmethod
+    def is_colab_env(cls):
         if 'google.colab' in sys.modules:
             print(f'COLAB environment detected.')
             return True
@@ -21,9 +21,9 @@ class ColabTPUEnvironmentManager(COLABEnvironmentManager):
     tpu_resolver = None
     tpu_strategy = None
 
-    @staticmethod
-    def is_tpu_env():
-        if not COLABEnvironmentManager.is_colab_env():
+    @classmethod
+    def is_tpu_env(cls):
+        if not cls.is_colab_env():
             return False
         if os.environ.get('COLAB_TPU_ADDR') is None:
             return False
