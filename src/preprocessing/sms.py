@@ -50,8 +50,8 @@ class SMSDataPreprocessingManager(PreprocessingManager):
         ratio: int = 0.8,
     ) -> list:
         cnt = int(len(df)*ratio)
-        train_df = df[:cnt]
-        test_df = df[cnt:]
+        train_df = df[:cnt].copy()
+        test_df = df[cnt:].copy()
         return train_df, test_df
 
     def remove_stopwords(
