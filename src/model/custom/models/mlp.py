@@ -12,14 +12,16 @@ class MLPModel(tf.keras.Model):
                  input_dim: int = 32,
                  output_dim: int = 2):
         super(MLPModel, self).__init__()
-        self.d1 = tf.keras.layers.Dense(input_dim, activation='relu')
-        self.d2 = tf.keras.layers.Dense(50, activation='relu')
-        self.d3 = tf.keras.layers.Dense(output_dim, activation='softmax')
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        self.l1 = tf.keras.layers.Dense(input_dim, activation='relu')
+        self.l2 = tf.keras.layers.Dense(50, activation='relu')
+        self.l3 = tf.keras.layers.Dense(output_dim, activation='softmax')
 
     def call(self, x, training=None):
-        x = self.d1(x)
-        x = self.d2(x)
-        x = self.d3(x)
+        x = self.l1(x)
+        x = self.l2(x)
+        x = self.l3(x)
         return x
 
     @staticmethod
@@ -100,6 +102,9 @@ def main():
     # 평가
     for step, (test_x, test_y) in enumerate(tfds_test, 1):
         test_step(model, test_x, test_y, test_acc=test_acc)
+
+    # 요약
+    print(f'train_acc: {train_acc.result():.3f}, test_acc: {test_acc.result():.3f}')
 
 
 if __name__ == '__main__':
