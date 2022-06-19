@@ -110,7 +110,7 @@ def main():
         test_step(model, test_x, test_y, test_acc=test_acc)
 
     # 요약
-    print(f'train_acc: {train_acc.result():.3f},'
+    print(f'train_acc: {train_acc.result():.3f}, '
           f'test_acc: {test_acc.result():.3f}')
 
 
