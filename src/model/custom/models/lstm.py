@@ -116,7 +116,7 @@ def main():
 
 if __name__ == '__main__':
     if ColabTPUEnvironmentManager.is_tpu_env():
-        with ColabTPUEnvironmentManager.get_tpu_strategy():
+        with ColabTPUEnvironmentManager.get_tpu_strategy().scope():
             main()
     else:
         main()
