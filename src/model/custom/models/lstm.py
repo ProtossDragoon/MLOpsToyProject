@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 
 # 프로젝트
+from src.environment.tpu import ColabTPUEnvironmentManager
 from src.preprocessing.sms import SMSDataPreprocessingManager
 
 
@@ -114,4 +115,8 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if ColabTPUEnvironmentManager.is_tpu_env():
+        with ColabTPUEnvironmentManager.get_tpu_strategy():
+            main()
+    else:
+        main()
