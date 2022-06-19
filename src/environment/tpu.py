@@ -10,10 +10,13 @@ class COLABEnvironmentManager():
 
     @classmethod
     def is_colab_env(cls):
-        if 'google.colab' in sys.modules:
+        try:
+            import google.colab
+        except ModuleNotFoundError:
+            return False
+        else:
             print(f'COLAB environment detected.')
             return True
-        return False
 
 
 class ColabTPUEnvironmentManager(COLABEnvironmentManager):
