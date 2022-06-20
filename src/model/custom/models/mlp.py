@@ -27,7 +27,7 @@ class MLPModel(tf.keras.Model):
 
     @staticmethod
     def loss_object(y, y_hat):
-        scce = tf.keras.losses.SparseCategoricalCrossentropy()
+        scce = tf.keras.losses.SparseCategoricalCrossentropy(reduction=tf.keras.losses.Reduction.NONE)
         return scce(y, y_hat)
 
 
