@@ -110,14 +110,14 @@ def main():
         strategy = ColabTPUEnvironmentManager.get_tpu_strategy()
         strategy.run(train_step, args=(x, y))
 
-    def test_step(text, label):
-        y_hat = model(text, training=False)
-        test_acc.update_state(label, text)
+    def test_step(x, y):
+        y_hat = model(x, training=False)
+        test_acc.update_state(y, y_hat)
 
     @tf.function
-    def distributed_test_step(text, label):
+    def distributed_test_step(x, y):
         strategy = ColabTPUEnvironmentManager.get_tpu_strategy()
-        strategy.run(test_step, args=(text, label))
+        strategy.run(test_step, args=(x, y))
 
     # 학습
     for epoch in range(1, epochs+1):
