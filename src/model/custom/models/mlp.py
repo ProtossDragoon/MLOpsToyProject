@@ -47,6 +47,7 @@ def train_step(model, x, y, train_acc):
     print(f'train_accuracy: {train_acc(y, y_hat):.3f}')
 
 
+@tf.function
 def distributed_train_step(model, x, y, train_acc):
     strategy = ColabTPUEnvironmentManager.get_tpu_strategy()
     strategy.run(train_step, args=(model, x, y, train_acc))
@@ -57,6 +58,7 @@ def test_step(model, text, label, test_acc):
     print(f'test_accuracy: {test_acc(label, y_hat):.3f}')
 
 
+@tf.function
 def distributed_test_step(model, x, y, test_acc):
     strategy = ColabTPUEnvironmentManager.get_tpu_strategy()
     strategy.run(test_step, args=(model, x, y, test_acc))
