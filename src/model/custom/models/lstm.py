@@ -39,33 +39,6 @@ class LSTMModel(tf.keras.Model):
         return scce(y, y_hat)
 
 
-def train_step(model, x, y, train_acc):
-    adam = tf.keras.optimizers.Adam()
-    with tf.GradientTape() as tape:
-        y_hat = model(x, training=True)
-        loss = model.loss_object(y, y_hat)
-        gradients = tape.gradient(loss, model.trainable_variables)
-        adam.apply_gradients(zip(gradients, model.trainable_variables))
-    print(f'train_accuracy: {train_acc(y, y_hat):.3f}')
-
-
-@tf.function
-def distributed_train_step(model, x, y, train_acc):
-    strategy = ColabTPUEnvironmentManager.get_tpu_strategy()
-    strategy.run(train_step, args=(model, x, y, train_acc))
-
-
-def test_step(model, text, label, test_acc):
-    y_hat = model(text, training=False)
-    print(f'test_accuracy: {test_acc(label, y_hat):.3f}')
-
-
-@tf.function
-def distributed_test_step(model, x, y, test_acc):
-    strategy = ColabTPUEnvironmentManager.get_tpu_strategy()
-    strategy.run(test_step, args=(model, x, y, test_acc))
-
-
 def main():
     # 데이터 로드
     prep_manager = SMSDataPreprocessingManager(
@@ -122,21 +95,44 @@ def main():
     train_acc = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accy')
     test_acc = tf.keras.metrics.SparseCategoricalAccuracy(name='test_acc')
 
+    # 학습 루프 정의
+    def train_step(x, y):
+        adam = tf.keras.optimizers.Adam()
+        with tf.GradientTape() as tape:
+            y_hat = model(x, training=True)
+            loss = model.loss_object(y, y_hat)
+            gradients = tape.gradient(loss, model.trainable_variables)
+            adam.apply_gradients(zip(gradients, model.trainable_variables))
+        print(f'train_accuracy: {train_acc(y, y_hat):.3f}')
+
+    @tf.function
+    def distributed_train_step(x, y):
+        strategy = ColabTPUEnvironmentManager.get_tpu_strategy()
+        strategy.run(train_step, args=(model, x, y, train_acc))
+
+    def test_step(text, label):
+        y_hat = model(text, training=False)
+        print(f'test_accuracy: {test_acc(label, y_hat):.3f}')
+
+    @tf.function
+    def distributed_test_step(text, label):
+        strategy = ColabTPUEnvironmentManager.get_tpu_strategy()
+        strategy.run(test_step, args=(text, label))
+
     # 학습
     for epoch in range(1, epochs+1):
         for step, (train_x, train_y) in enumerate(tfds_train, 1):
             print(f'epoch: {epoch}, step: {step}', end='\t')
             # print(f'x: {repr(train_x.shape)}, y: {repr(train_y.shape)}')
             if ColabTPUEnvironmentManager.is_tpu_env():
-                distributed_train_step(
-                    model, train_x, train_y, train_acc=train_acc)
-            train_step(model, train_x, train_y, train_acc=train_acc)
+                distributed_train_step(train_x, train_y)
+            train_step(train_x, train_y)
 
     # 평가
     for step, (test_x, test_y) in enumerate(tfds_test, 1):
         if ColabTPUEnvironmentManager.is_tpu_env():
-            distributed_test_step(model, test_x, test_y, train_acc=test_acc)
-        test_step(model, test_x, test_y, test_acc=test_acc)
+            distributed_test_step(test_x, test_y)
+        test_step(test_x, test_y)
 
     # 요약
     print(f'train_acc: {train_acc.result():.3f}, '
