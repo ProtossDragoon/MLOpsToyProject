@@ -105,7 +105,7 @@ def main():
     @tf.function
     def distributed_train_step(x, y):
         strategy = ColabTPUEnvironmentManager.get_tpu_strategy()
-        strategy.run(train_step, args=(model, x, y, train_acc))
+        strategy.run(train_step, args=(x, y))
 
     def test_step(text, label):
         y_hat = model(text, training=False)
