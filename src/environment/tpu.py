@@ -35,14 +35,17 @@ class ColabTPUEnvironmentManager(COLABEnvironmentManager):
 
     @classmethod
     def set_tpu_resolver(cls):
-        cls.tpu_resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
+        c = ColabTPUEnvironmentManager
+        c.tpu_resolver = tf.distribute.cluster_resolver.TPUClusterResolver(
             tpu='grpc://' + os.environ.get('COLAB_TPU_ADDR'))
-        tf.config.experimental_connect_to_cluster(cls.tpu_resolver)
-        tf.tpu.experimental.initialize_tpu_system(cls.tpu_resolver)
+        tf.config.experimental_connect_to_cluster(c.tpu_resolver)
+        tf.tpu.experimental.initialize_tpu_system(c.tpu_resolver)
 
     @classmethod
     def get_tpu_strategy(cls):
-        if cls.tpu_resolver is None:
+        c = ColabTPUEnvironmentManager
+        if c.tpu_resolver is None:
             cls.set_tpu_resolver()
-        cls.strategy = tf.distribute.TPUStrategy(cls.tpu_resolver)
-        return cls.strategy
+        if c.tpu_strategy is None:
+            c.tpu_strategy = tf.distribute.TPUStrategy(c.tpu_resolver)
+        return c.tpu_strategy
