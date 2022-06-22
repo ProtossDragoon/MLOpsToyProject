@@ -27,7 +27,13 @@ class MLPModel(tf.keras.Model):
 
     @staticmethod
     def loss_object(y, y_hat):
-        scce = tf.keras.losses.SparseCategoricalCrossentropy(reduction=tf.keras.losses.Reduction.NONE)
+        if ColabTPUEnvironmentManager.is_tpu_env():
+            #FIXME https://www.tensorflow.org/api_docs/python/tf/keras/losses/Reduction
+            reduction = tf.keras.losses.Reduction.NONE
+        else:
+            reduction = tf.keras.losses.Reduction.AUTO
+        scce = tf.keras.losses.SparseCategoricalCrossentropy(
+            reduction=reduction)
         return scce(y, y_hat)
 
 
@@ -90,6 +96,12 @@ def main():
         (train_x_tfidf, train_y)).batch(batch_size)
     tfds_test = tf.data.Dataset.from_tensor_slices(
         (test_x_tfidf, test_y)).batch(1)
+
+    if ColabTPUEnvironmentManager.is_tpu_env():
+        tfds_train = ColabTPUEnvironmentManager.get_tpu_strategy(
+        ).experimental_distribute_dataset(tfds_train)
+        tfds_test = ColabTPUEnvironmentManager.get_tpu_strategy(
+        ).experimental_distribute_dataset(tfds_test)
 
     # 메트릭 정의
     train_acc = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accy')
