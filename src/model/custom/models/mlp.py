@@ -99,8 +99,8 @@ def main():
             y_hat = model(x, training=True)
             loss = model.loss_object(y, y_hat)
             gradients = tape.gradient(loss, model.trainable_variables)
-            adam.apply_gradients(zip(gradients, model.trainable_variables))
-        print(f'train_accuracy: {train_acc(y, y_hat):.3f}')
+        adam.apply_gradients(zip(gradients, model.trainable_variables))
+        train_acc.update_state(y, y_hat)
 
     @tf.function
     def distributed_train_step(x, y):
@@ -109,7 +109,7 @@ def main():
 
     def test_step(text, label):
         y_hat = model(text, training=False)
-        print(f'test_accuracy: {test_acc(label, y_hat):.3f}')
+        test_acc.update_state(label, text)
 
     @tf.function
     def distributed_test_step(text, label):
@@ -124,12 +124,14 @@ def main():
             if ColabTPUEnvironmentManager.is_tpu_env():
                 distributed_train_step(train_x, train_y)
             train_step(train_x, train_y)
+            print(f'train_accuracy: {train_acc.result():.3f}')
 
     # 평가
     for step, (test_x, test_y) in enumerate(tfds_test, 1):
         if ColabTPUEnvironmentManager.is_tpu_env():
             distributed_test_step(test_x, test_y)
         test_step(test_x, test_y)
+        print(f'train_accuracy: {test_acc.result():.3f}')
 
     # 요약
     print(f'train_acc: {train_acc.result():.3f}, '
