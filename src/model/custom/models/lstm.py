@@ -10,15 +10,11 @@ from src.preprocessing.sms import SMSDataPreprocessingManager
 class LSTMModel(tf.keras.Model):
 
     def __init__(self,
-                 word_embedding_dim: int = None,
-                 sentence_max_len_dim: int = None,
                  output_dim: int = 2):
         super(LSTMModel, self).__init__()
-        self.word_embedding_dim = word_embedding_dim
-        self.sentence_max_len_dim = sentence_max_len_dim
         self.output_dim = output_dim
-        self.l1 = tf.keras.layers.LSTM(80, return_sequences=True)
-        self.l2 = tf.keras.layers.LSTM(30, return_sequences=True)
+        self.l1 = tf.keras.layers.LSTM(50, return_sequences=True)
+        self.l2 = tf.keras.layers.LSTM(50, return_sequences=True)
         self.l3 = tf.keras.layers.LSTM(output_dim, activation='softmax')
 
     def call(self, x, training=None):
@@ -72,10 +68,10 @@ def main():
     # 모델 정의
     word_embedding_dim = train_x_onehot.shape[-1]
     sentence_max_len_dim = train_x_onehot.shape[-2]
-    model = LSTMModel(
-        word_embedding_dim=word_embedding_dim,
-        sentence_max_len_dim=sentence_max_len_dim,
-    )
+    model = LSTMModel()
+    model.build((None, sentence_max_len_dim, word_embedding_dim))
+    model.call(tf.keras.Input((sentence_max_len_dim, word_embedding_dim)))
+    model.summary()
 
     epochs = 3
     batch_size = 2
@@ -95,9 +91,11 @@ def main():
     train_acc = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accy')
     test_acc = tf.keras.metrics.SparseCategoricalAccuracy(name='test_acc')
 
+    # 옵티마이저 정의
+    adam = tf.keras.optimizers.Adam()
+
     # 학습 루프 정의
     def train_step(x, y):
-        adam = tf.keras.optimizers.Adam()
         with tf.GradientTape() as tape:
             y_hat = model(x, training=True)
             loss = model.loss_object(y, y_hat)

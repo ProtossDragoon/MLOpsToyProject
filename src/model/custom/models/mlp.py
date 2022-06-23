@@ -10,13 +10,11 @@ from src.preprocessing.sms import SMSDataPreprocessingManager
 class MLPModel(tf.keras.Model):
 
     def __init__(self,
-                 input_dim: int = 32,
                  output_dim: int = 2):
         super(MLPModel, self).__init__()
-        self.input_dim = input_dim
         self.output_dim = output_dim
-        self.l1 = tf.keras.layers.Dense(input_dim, activation='relu')
-        self.l2 = tf.keras.layers.Dense(50, activation='relu')
+        self.l1 = tf.keras.layers.Dense(300, activation='relu')
+        self.l2 = tf.keras.layers.Dense(300, activation='relu')
         self.l3 = tf.keras.layers.Dense(output_dim, activation='softmax')
 
     def call(self, x, training=None):
@@ -72,7 +70,10 @@ def main():
 
     # 모델 정의
     input_dim = train_x_tfidf.shape[-1]
-    model = MLPModel(input_dim=input_dim)
+    model = MLPModel()
+    model.build((None, input_dim,))
+    model.call(tf.keras.Input((input_dim,)))
+    model.summary()
 
     epochs = 3
     batch_size = 2
@@ -92,9 +93,11 @@ def main():
     train_acc = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accy')
     test_acc = tf.keras.metrics.SparseCategoricalAccuracy(name='test_acc')
 
+    # 옵티마이저 정의
+    adam = tf.keras.optimizers.Adam()
+
     # 학습 루프 정의
     def train_step(x, y):
-        adam = tf.keras.optimizers.Adam()
         with tf.GradientTape() as tape:
             y_hat = model(x, training=True)
             loss = model.loss_object(y, y_hat)
