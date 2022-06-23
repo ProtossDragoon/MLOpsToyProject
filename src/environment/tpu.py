@@ -8,6 +8,8 @@ import tensorflow as tf
 
 class COLABEnvironmentManager():
 
+    _print_colab_env_manager_once = True
+
     @classmethod
     def is_colab_env(cls):
         try:
@@ -15,11 +17,16 @@ class COLABEnvironmentManager():
         except ModuleNotFoundError:
             return False
         else:
-            print(f'COLAB environment detected.')
+            c = COLABEnvironmentManager
+            if c._print_colab_env_manager_once:
+                print(f'COLAB environment detected.')
+                c._print_colab_env_manager_once = False
             return True
 
 
 class ColabTPUEnvironmentManager(COLABEnvironmentManager):
+
+    _print_colab_tpu_env_manager_once = True
 
     tpu_resolver = None
     tpu_strategy = None
@@ -30,7 +37,10 @@ class ColabTPUEnvironmentManager(COLABEnvironmentManager):
             return False
         if os.environ.get('COLAB_TPU_ADDR') is None:
             return False
-        print(f'TPU environment detected.')
+        c = ColabTPUEnvironmentManager
+        if c._print_colab_tpu_env_manager_once:
+            print(f'TPU environment detected.')
+            c._print_colab_tpu_env_manager_once = False
         return True
 
     @classmethod
