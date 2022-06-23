@@ -32,4 +32,9 @@ python3 -m pip install tensorflow-macos
 
 ## 실행
 
-`TODO`
+모델링 및 학습이 잘 동작하는지 확인하기 위해 일부 기능을 실행시켜볼 수 있습니다. **프로젝트 루트**에서 다음 명령을 실행합니다. 이 명령은 샘플 데이터를 이용해 자동으로 전처리, 모델링, 학습, 모델 평가를 진행합니다.
+
+```bash
+python3 -m src.model.custom.models.mlp
+python3 -m src.model.custom.models.lstm
+```

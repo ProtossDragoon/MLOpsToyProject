@@ -7,15 +7,15 @@ from src.environment.tpu import ColabTPUEnvironmentManager
 from src.preprocessing.sms import SMSDataPreprocessingManager
 
 
-class MLPModel(tf.keras.Model):
+class LSTMModel(tf.keras.Model):
 
     def __init__(self,
                  output_dim: int = 2):
-        super(MLPModel, self).__init__()
+        super(LSTMModel, self).__init__()
         self.output_dim = output_dim
-        self.l1 = tf.keras.layers.Dense(300, activation='relu')
-        self.l2 = tf.keras.layers.Dense(300, activation='relu')
-        self.l3 = tf.keras.layers.Dense(output_dim, activation='softmax')
+        self.l1 = tf.keras.layers.LSTM(50, return_sequences=True)
+        self.l2 = tf.keras.layers.LSTM(50, return_sequences=True)
+        self.l3 = tf.keras.layers.LSTM(output_dim, activation='softmax')
 
     def call(self, x, training=None):
         x = self.l1(x)
@@ -36,7 +36,6 @@ class MLPModel(tf.keras.Model):
 
 
 def main():
-
     # 데이터 로드
     prep_manager = SMSDataPreprocessingManager(
         feature_column_name='message',
@@ -52,36 +51,35 @@ def main():
 
     # 훈련 데이터 전처리
     train_x, train_y = prep_manager.get_xy(train_df, {'spam': 0., 'ham': 1.})
-    train_x_dtm = prep_manager.get_dtm(train_x)
-    train_x_tfidf = prep_manager.get_tfidf(train_x_dtm)
+    train_x_onehot = prep_manager.get_onehot(train_x)
 
     # 테스트 데이터 전처리
     test_x, test_y = prep_manager.get_xy(test_df, {'spam': 0., 'ham': 1.})
-    test_x_dtm = prep_manager.get_dtm(test_x)
-    test_x_tfidf = prep_manager.get_tfidf(test_x_dtm)
+    test_x_onehot = prep_manager.get_onehot(test_x)
 
     # 데이터 요약
     print(f'train data spec:')
-    print(f'x: {train_x_tfidf.shape}({train_x_tfidf.dtype})')
+    print(f'x: {train_x_onehot.shape}({train_x_onehot.dtype})')
     print(f'y: {train_y.shape}({train_y.dtype})')
     print(f'test data spec:')
-    print(f'x: {test_x_tfidf.shape}({test_x_tfidf.dtype})')
+    print(f'x: {test_x_onehot.shape}({test_x_onehot.dtype})')
     print(f'y: {test_y.shape}({test_y.dtype})')
 
     # 모델 정의
-    input_dim = train_x_tfidf.shape[-1]
-    model = MLPModel()
-    model.build((None, input_dim,))
-    model.call(tf.keras.Input((input_dim,)))
+    word_embedding_dim = train_x_onehot.shape[-1]
+    sentence_max_len_dim = train_x_onehot.shape[-2]
+    model = LSTMModel()
+    model.build((None, sentence_max_len_dim, word_embedding_dim))
+    model.call(tf.keras.Input((sentence_max_len_dim, word_embedding_dim)))
     model.summary()
 
     epochs = 3
     batch_size = 2
 
     tfds_train = tf.data.Dataset.from_tensor_slices(
-        (train_x_tfidf, train_y)).batch(batch_size)
+        (train_x_onehot, train_y)).batch(batch_size)
     tfds_test = tf.data.Dataset.from_tensor_slices(
-        (test_x_tfidf, test_y)).batch(1)
+        (test_x_onehot, test_y)).batch(1)
 
     if ColabTPUEnvironmentManager.is_tpu_env():
         tfds_train = ColabTPUEnvironmentManager.get_tpu_strategy(
