@@ -8,4 +8,6 @@ seaborn
 nltk
 scikit-learn
 wordcloud
+fastapi
+uvicorn
 protobuf<=3.20.1
