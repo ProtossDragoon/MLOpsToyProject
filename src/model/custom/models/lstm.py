@@ -88,7 +88,7 @@ def main():
         ).experimental_distribute_dataset(tfds_test)
 
     # 메트릭 정의
-    train_acc = tf.keras.metrics.SparseCategoricalAccuracy(name='train_accy')
+    train_acc = tf.keras.metrics.SparseCategoricalAccuracy(name='train_acc')
     test_acc = tf.keras.metrics.SparseCategoricalAccuracy(name='test_acc')
 
     # 옵티마이저 정의
