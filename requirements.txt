@@ -8,4 +8,5 @@ seaborn
 nltk
 scikit-learn
 wordcloud
+mlflow
 protobuf<=3.20.1
