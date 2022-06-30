@@ -35,59 +35,9 @@ class MLPModel(tf.keras.Model):
         return scce(y, y_hat)
 
 
-def main():
-
-    # 데이터 로드
-    prep_manager = SMSDataPreprocessingManager(
-        feature_column_name='message',
-        label_column_name='label'
-    )
-    path = './data/sample/spam.csv'
-    df = prep_manager.read_sample_data(path)
-
-    # 기본 전처리
-    prep_manager.remove_stopwords(df)
-    prep_manager.sentence_to_lowercase(df)
-    train_df, test_df = prep_manager.split(df, 0.8)
-
-    # 훈련 데이터 전처리
-    train_x, train_y = prep_manager.get_xy(train_df, {'spam': 0., 'ham': 1.})
-    train_x_dtm = prep_manager.get_dtm(train_x)
-    train_x_tfidf = prep_manager.get_tfidf(train_x_dtm)
-
-    # 테스트 데이터 전처리
-    test_x, test_y = prep_manager.get_xy(test_df, {'spam': 0., 'ham': 1.})
-    test_x_dtm = prep_manager.get_dtm(test_x)
-    test_x_tfidf = prep_manager.get_tfidf(test_x_dtm)
-
-    # 데이터 요약
-    print(f'train data spec:')
-    print(f'x: {train_x_tfidf.shape}({train_x_tfidf.dtype})')
-    print(f'y: {train_y.shape}({train_y.dtype})')
-    print(f'test data spec:')
-    print(f'x: {test_x_tfidf.shape}({test_x_tfidf.dtype})')
-    print(f'y: {test_y.shape}({test_y.dtype})')
-
-    # 모델 정의
-    input_dim = train_x_tfidf.shape[-1]
-    model = MLPModel()
-    model.build((None, input_dim,))
-    model.call(tf.keras.Input((input_dim,)))
-    model.summary()
+def train(model, tfds_train, tfds_test):
 
     epochs = 3
-    batch_size = 2
-
-    tfds_train = tf.data.Dataset.from_tensor_slices(
-        (train_x_tfidf, train_y)).batch(batch_size)
-    tfds_test = tf.data.Dataset.from_tensor_slices(
-        (test_x_tfidf, test_y)).batch(1)
-
-    if ColabTPUEnvironmentManager.is_tpu_env():
-        tfds_train = ColabTPUEnvironmentManager.get_tpu_strategy(
-        ).experimental_distribute_dataset(tfds_train)
-        tfds_test = ColabTPUEnvironmentManager.get_tpu_strategy(
-        ).experimental_distribute_dataset(tfds_test)
 
     # 메트릭 정의
     train_acc = tf.keras.metrics.SparseCategoricalAccuracy(name='train_acc')
@@ -139,6 +89,62 @@ def main():
     # 요약
     print(f'train_acc: {train_acc.result():.3f}, '
           f'test_acc: {test_acc.result():.3f}')
+
+
+def main():
+
+    # 데이터 로드
+    prep_manager = SMSDataPreprocessingManager(
+        feature_column_name='message',
+        label_column_name='label'
+    )
+    path = './data/sample/spam.csv'
+    df = prep_manager.read_sample_data(path)
+
+    # 기본 전처리
+    prep_manager.remove_stopwords(df)
+    prep_manager.sentence_to_lowercase(df)
+    train_df, test_df = prep_manager.split(df, 0.8)
+
+    # 훈련 데이터 전처리
+    train_x, train_y = prep_manager.get_xy(train_df, {'spam': 0., 'ham': 1.})
+    train_x_dtm = prep_manager.get_dtm(train_x)
+    train_x_tfidf = prep_manager.get_tfidf(train_x_dtm)
+
+    # 테스트 데이터 전처리
+    test_x, test_y = prep_manager.get_xy(test_df, {'spam': 0., 'ham': 1.})
+    test_x_dtm = prep_manager.get_dtm(test_x)
+    test_x_tfidf = prep_manager.get_tfidf(test_x_dtm)
+
+    # 데이터 요약
+    print(f'train data spec:')
+    print(f'x: {train_x_tfidf.shape}({train_x_tfidf.dtype})')
+    print(f'y: {train_y.shape}({train_y.dtype})')
+    print(f'test data spec:')
+    print(f'x: {test_x_tfidf.shape}({test_x_tfidf.dtype})')
+    print(f'y: {test_y.shape}({test_y.dtype})')
+
+    # 모델 정의
+    input_dim = train_x_tfidf.shape[-1]
+    model = MLPModel()
+    model.build((None, input_dim,))
+    model.call(tf.keras.Input((input_dim,)))
+    model.summary()
+
+    batch_size = 2
+
+    tfds_train = tf.data.Dataset.from_tensor_slices(
+        (train_x_tfidf, train_y)).batch(batch_size)
+    tfds_test = tf.data.Dataset.from_tensor_slices(
+        (test_x_tfidf, test_y)).batch(1)
+
+    if ColabTPUEnvironmentManager.is_tpu_env():
+        tfds_train = ColabTPUEnvironmentManager.get_tpu_strategy(
+        ).experimental_distribute_dataset(tfds_train)
+        tfds_test = ColabTPUEnvironmentManager.get_tpu_strategy(
+        ).experimental_distribute_dataset(tfds_test)
+
+    train(model, tfds_train, tfds_test)
 
 
 if __name__ == '__main__':
