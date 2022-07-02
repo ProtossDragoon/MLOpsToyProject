@@ -1,6 +1,7 @@
 # 서드파티
 import tensorflow as tf
 import numpy as np
+import mlflow
 
 # 프로젝트
 from src.environment.tpu import ColabTPUEnvironmentManager
@@ -38,6 +39,7 @@ class MLPModel(tf.keras.Model):
 def train(model, tfds_train, tfds_test):
 
     epochs = 3
+    mlflow.log_param('epochs', epochs)
 
     # 메트릭 정의
     train_acc = tf.keras.metrics.SparseCategoricalAccuracy(name='train_acc')
@@ -77,18 +79,20 @@ def train(model, tfds_train, tfds_test):
             if ColabTPUEnvironmentManager.is_tpu_env():
                 distributed_train_step(train_x, train_y)
             train_step(train_x, train_y)
-            print(f'train_accuracy: {train_acc.result():.3f}')
+            print(f'train_acc: {train_acc.result():.3f}')
+            mlflow.log_metric('train_acc', train_acc.result().numpy(), step=step)
 
     # 평가
     for step, (test_x, test_y) in enumerate(tfds_test, 1):
         if ColabTPUEnvironmentManager.is_tpu_env():
             distributed_test_step(test_x, test_y)
         test_step(test_x, test_y)
-        print(f'train_accuracy: {test_acc.result():.3f}')
+        print(f'test_acc: {test_acc.result():.3f}')
+    mlflow.log_metric('test_acc', test_acc.result().numpy())
 
     # 요약
-    print(f'train_acc: {train_acc.result():.3f}, '
-          f'test_acc: {test_acc.result():.3f}')
+    print(f'final_train_acc: {train_acc.result():.3f}, '
+          f'final_test_acc: {test_acc.result():.3f}')
 
 
 def main():
@@ -99,7 +103,9 @@ def main():
         label_column_name='label'
     )
     path = './data/sample/spam.csv'
-    df = prep_manager.read_sample_data(path)
+    amount_of_data = 0.1
+    df = prep_manager.read_sample_data(path, ratio=amount_of_data)
+    mlflow.log_param('amount_of_data', len(df))
 
     # 기본 전처리
     prep_manager.remove_stopwords(df)
@@ -132,6 +138,7 @@ def main():
     model.summary()
 
     batch_size = 2
+    mlflow.log_param('batch_size', batch_size)
 
     tfds_train = tf.data.Dataset.from_tensor_slices(
         (train_x_tfidf, train_y)).batch(batch_size)
@@ -145,6 +152,7 @@ def main():
         ).experimental_distribute_dataset(tfds_test)
 
     train(model, tfds_train, tfds_test)
+    mlflow.keras.log_model(model, model.name)
 
 
 if __name__ == '__main__':
