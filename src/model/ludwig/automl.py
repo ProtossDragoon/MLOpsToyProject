@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from ludwig.api import LudwigModel
 from ludwig.visualize import learning_curves
 from ludwig.visualize import confusion_matrix
+from ludwig.contribs.mlflow import MlflowCallback
 
 # 프로젝트
 from src.model.ludwig.config import LudwigConfigManager
@@ -19,14 +20,15 @@ def main():
         label_column_name='label'
     )
     path = './data/sample/spam.csv'
-    df = prep_manager.read_sample_data(path)
+    df = prep_manager.read_sample_data(path, 1.0)
     df = prep_manager.split(df, 0.8)
     train_df, test_df = df
 
     # Constructs Ludwig model from config dictionary
     config_manager = LudwigConfigManager(prep_manager)
     model = LudwigModel(config_manager.get_ludwig_config(),
-                        logging_level=logging.INFO)
+                        logging_level=logging.INFO,
+                        callbacks=[MlflowCallback()])
 
     # Trains the model. This cell might take a few minutes.
     train_stats, preprocessed_data, output_directory = model.train(
