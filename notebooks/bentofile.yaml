@@ -1,0 +1,9 @@
+service: "nb_service.py:svc"
+labels:
+  owner: bentoml-team
+  project: gallery
+include:
+- "*.py"
+python:
+  packages:
+    - pandas
