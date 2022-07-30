@@ -6,7 +6,7 @@
 
 ## 목적
 
-![image](https://github.com/ProtossDragoon/MLOpsToyProject/blob/master/docs/img/mlops_level1.svg)
+![image](https://github.com/ProtossDragoon/MLOpsToyProject/blob/main/docs/img/mlops_level1.svg)
 이미지 출처: [Google Cloud](https://cloud.google.com/architecture/mlops-continuous-delivery-and-automation-pipelines-in-machine-learning?hl=ko#mlops_level_0_manual_process)
 
 - 다음 과정을 포함하는 Level 1 이상의 머신러닝 자동화 파이프라인을 구축합니다.
